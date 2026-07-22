@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { 
-  View, Text, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform 
+import {
+  View, Text, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, KeyboardAvoidingView, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -66,14 +66,6 @@ const ChatDetailScreen = () => {
           <Text style={styles.headerName}>{selectedChat.agentName}</Text>
           <Text style={styles.headerStatus}>Online</Text>
         </View>
-        <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.actionBtn}>
-            <Icon name="call-outline" size={22} color={colors.secondaryText} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn}>
-            <Icon name="videocam-outline" size={22} color={colors.secondaryText} />
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* Property Context Card */}
@@ -95,7 +87,7 @@ const ChatDetailScreen = () => {
       />
 
       {/* Input Area */}
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
@@ -111,8 +103,8 @@ const ChatDetailScreen = () => {
             onChangeText={setInputText}
             multiline
           />
-          <TouchableOpacity 
-            style={[styles.sendBtn, inputText.trim().length > 0 && styles.sendBtnActive]} 
+          <TouchableOpacity
+            style={[styles.sendBtn, inputText.trim().length > 0 && styles.sendBtnActive]}
             onPress={sendMessage}
           >
             <Icon name="send" size={18} color="#ffffff" />

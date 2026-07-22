@@ -3,40 +3,40 @@ import {
   View,
   Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   FlatList,
   Image,
+  TextInput,
   ScrollView,
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
 import FocusAwareStatusBar from '../../components/common/FocusAwareStatusBar';
-import BottomSheet from '../../components/common/BottomSheet';
 import ExploreScreenSkeleton from '../../components/common/ExploreScreenSkeleton';
 import { useModeStore } from '../../store/useModeStore';
-import { allProperties } from '../../data/dummyData';
+import { featuredProperties, recommendedProperties } from '../../data/dummyData';
 import { colors } from '../../theme/colors';
 
 const CATEGORIES = ['All', 'Villa', 'Apartment', 'House', 'Office', 'Condo'];
 
-const ExploreScreen = () => {
-  const navigation = useNavigation<any>();
+const PropertyListScreen = ({ route, navigation }: any) => {
+  const { title = 'Properties', type = 'featured' } = route.params || {};
+
   const mode = useModeStore(state => state.mode);
+  const sourceData = type === 'featured' ? featuredProperties : recommendedProperties;
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [selectedType, setSelectedType] = useState<'All' | 'Buy' | 'Rent'>('All');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 800); // 0.8s skeleton loader
+    }, 800);
     return () => clearTimeout(timer);
   }, []);
 
@@ -51,12 +51,11 @@ const ExploreScreen = () => {
 
   const [favorites, setFavorites] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
-    allProperties.forEach(p => {
+    sourceData.forEach(p => {
       initial[p.id] = p.isFavorite;
     });
     return initial;
   });
-  const [filterVisible, setFilterVisible] = useState(false);
 
   const toggleFavorite = (id: string) => {
     setFavorites(prev => ({ ...prev, [id]: !prev[id] }));
@@ -64,9 +63,9 @@ const ExploreScreen = () => {
 
   const handleScroll = (event: any) => {
     const offsetY = event.nativeEvent.contentOffset.y;
-    if (offsetY > 300 && !showScrollTop) {
+    if (offsetY > 250 && !showScrollTop) {
       setShowScrollTop(true);
-    } else if (offsetY <= 300 && showScrollTop) {
+    } else if (offsetY <= 250 && showScrollTop) {
       setShowScrollTop(false);
     }
   };
@@ -75,12 +74,10 @@ const ExploreScreen = () => {
     flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
   };
 
-  const filteredProperties = useMemo(() => {
-    return allProperties.filter(property => {
-      // Global Buy/Rent mode filter
+  const filteredData = useMemo(() => {
+    return sourceData.filter(property => {
       if (property.purpose !== mode) return false;
 
-      // Search query filter (matches title or location)
       const query = searchQuery.trim().toLowerCase();
       const matchesSearch =
         query === '' ||
@@ -88,15 +85,14 @@ const ExploreScreen = () => {
         property.location.toLowerCase().includes(query) ||
         property.category.toLowerCase().includes(query);
 
-      // Category filter
       const matchesCategory =
         selectedCategory === 'All' || property.category === selectedCategory;
 
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, selectedCategory, mode]);
+  }, [searchQuery, selectedCategory, sourceData, mode]);
 
-  const renderPropertyItem = ({ item }: { item: typeof allProperties[0] }) => {
+  const renderPropertyCard = ({ item }: { item: typeof sourceData[0] }) => {
     const isFav = favorites[item.id];
 
     return (
@@ -117,8 +113,8 @@ const ExploreScreen = () => {
           >
             <Icon
               name={isFav ? 'heart' : 'heart-outline'}
-              size={20}
-              color={isFav ? '#FF4B4B' : '#FFFFFF'}
+              size={18}
+              color={isFav ? '#FF4D4D' : '#FFFFFF'}
             />
           </TouchableOpacity>
         </View>
@@ -128,7 +124,7 @@ const ExploreScreen = () => {
             <Text style={styles.priceText}>{item.price}</Text>
             <View style={styles.ratingBadge}>
               <Icon name="star" size={12} color="#FBBF24" />
-              <Text style={styles.ratingText}>4.8</Text>
+              <Text style={styles.ratingText}>4.9</Text>
             </View>
           </View>
 
@@ -168,50 +164,42 @@ const ExploreScreen = () => {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <FocusAwareStatusBar barStyle={'dark-content'} />
 
-      {/* Header & Search Bar */}
+      {/* Modern Top Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Explore Properties</Text>
-        <Text style={styles.headerSubtitle}>Find your perfect home or investment</Text>
-
-        <View style={styles.searchRow}>
-          <View style={styles.searchContainer}>
-            <Icon name="search" size={20} color="#94A3B8" style={styles.searchIcon} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search by city, title or type..."
-              placeholderTextColor="#94A3B8"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              clearButtonMode="while-editing"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearBtn}>
-                <Icon name="close-circle" size={18} color="#94A3B8" />
-              </TouchableOpacity>
-            )}
-          </View>
-
+        <View style={styles.headerTopRow}>
           <TouchableOpacity
-            style={[
-              styles.filterBtn,
-              (selectedCategory !== 'All' || selectedType !== 'All') && styles.filterBtnActive,
-            ]}
-            onPress={() => setFilterVisible(true)}
-            activeOpacity={0.8}
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
           >
-            <Icon
-              name="options-outline"
-              size={22}
-              color={selectedCategory !== 'All' || selectedType !== 'All' ? '#FFFFFF' : colors.navyBlue}
-            />
+            <Icon name="arrow-back" size={22} color={colors.navyBlue} />
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>{title}</Text>
+          <View style={{ width: 40 }} />
         </View>
 
-        {/* Categories Bar */}
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Icon name="search-outline" size={18} color="#94A3B8" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder={`Search in ${title.toLowerCase()}...`}
+            placeholderTextColor="#94A3B8"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')} style={{ padding: 4 }}>
+              <Icon name="close-circle" size={18} color="#94A3B8" />
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Category Horizontal Filter */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesContainer}
+          contentContainerStyle={styles.categoryRow}
         >
           {CATEGORIES.map(cat => {
             const isSelected = selectedCategory === cat;
@@ -231,34 +219,23 @@ const ExploreScreen = () => {
         </ScrollView>
       </View>
 
-      {/* Main Properties List */}
+      {/* Main List */}
       <View style={styles.listSection}>
         {loading ? (
           <ExploreScreenSkeleton />
         ) : (
           <>
-            <View style={styles.resultsHeader}>
-              <Text style={styles.resultsCountText}>
-                {filteredProperties.length} {filteredProperties.length === 1 ? 'Property' : 'Properties'} Found
+            <View style={styles.resultsBar}>
+              <Text style={styles.resultsCount}>
+                {filteredData.length} {filteredData.length === 1 ? 'Property' : 'Properties'} Available
               </Text>
-
-              {(searchQuery !== '' || selectedCategory !== 'All') && (
-                <TouchableOpacity
-                  onPress={() => {
-                    setSearchQuery('');
-                    setSelectedCategory('All');
-                  }}
-                >
-                  <Text style={styles.resetFiltersText}>Reset Filters</Text>
-                </TouchableOpacity>
-              )}
             </View>
 
             <FlatList
               ref={flatListRef}
-              data={filteredProperties}
+              data={filteredData}
               keyExtractor={item => item.id}
-              renderItem={renderPropertyItem}
+              renderItem={renderPropertyCard}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.listContent}
               onScroll={handleScroll}
@@ -273,27 +250,18 @@ const ExploreScreen = () => {
               }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Icon name="search-outline" size={60} color="#CBD5E1" />
+              <Icon name="search-outline" size={50} color="#CBD5E1" />
               <Text style={styles.emptyTitle}>No Properties Found</Text>
               <Text style={styles.emptySubtitle}>
-                We couldn't find any results matching "{searchQuery}". Try searching for a different city or category.
+                No properties match your filter criteria. Try clearing search or category.
               </Text>
-              <TouchableOpacity
-                style={styles.clearSearchBtn}
-                onPress={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('All');
-                }}
-              >
-                <Text style={styles.clearSearchBtnText}>Clear Search</Text>
-              </TouchableOpacity>
             </View>
           }
         />
         </>
       )}
 
-        {/* Scroll to Top FAB Button */}
+        {/* Scroll to Top FAB */}
         {showScrollTop && (
           <TouchableOpacity
             style={styles.scrollTopBtn}
@@ -305,60 +273,6 @@ const ExploreScreen = () => {
           </TouchableOpacity>
         )}
       </View>
-
-      {/* Filter Bottom Sheet */}
-      <BottomSheet
-        visible={filterVisible}
-        onClose={() => setFilterVisible(false)}
-        height={380}
-      >
-        <Text style={styles.sheetTitle}>Filter Properties</Text>
-
-        <Text style={styles.filterSectionTitle}>Category</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sheetCategoryRow}>
-          {CATEGORIES.map(cat => (
-            <TouchableOpacity
-              key={cat}
-              style={[
-                styles.sheetCategoryChip,
-                selectedCategory === cat && styles.sheetCategoryChipActive,
-              ]}
-              onPress={() => setSelectedCategory(cat)}
-            >
-              <Text
-                style={[
-                  styles.sheetCategoryText,
-                  selectedCategory === cat && styles.sheetCategoryTextActive,
-                ]}
-              >
-                {cat}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-
-        <Text style={styles.filterSectionTitle}>Property Type</Text>
-        <View style={styles.toggleContainer}>
-          {(['All', 'Buy', 'Rent'] as const).map(type => (
-            <TouchableOpacity
-              key={type}
-              style={[styles.toggleBtn, selectedType === type && styles.toggleBtnActive]}
-              onPress={() => setSelectedType(type)}
-            >
-              <Text style={[styles.toggleText, selectedType === type && styles.toggleTextActive]}>
-                {type}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <TouchableOpacity
-          style={styles.applyBtn}
-          onPress={() => setFilterVisible(false)}
-        >
-          <Text style={styles.applyBtnText}>Apply Filters</Text>
-        </TouchableOpacity>
-      </BottomSheet>
     </SafeAreaView>
   );
 };
@@ -369,70 +283,58 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8FAFC',
   },
   header: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     paddingBottom: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
-  headerTitle: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.navyBlue,
-    letterSpacing: -0.5,
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#64748B',
-    marginTop: 2,
-    marginBottom: 16,
-  },
-  searchRow: {
+  headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 14,
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
-  searchContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    height: 48,
-  },
-  searchIcon: {
-    marginRight: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    color: colors.navyBlue,
-    height: '100%',
-  },
-  clearBtn: {
-    padding: 4,
-  },
-  filterBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: '#F1F5F9',
     justifyContent: 'center',
     alignItems: 'center',
-    marginLeft: 10,
   },
-  filterBtnActive: {
-    backgroundColor: colors.orange,
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.navyBlue,
+    letterSpacing: -0.3,
   },
-  categoriesContainer: {
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F5F9',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 44,
+    marginBottom: 12,
+  },
+  searchIcon: {
+    marginRight: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.navyBlue,
+    height: '100%',
+  },
+  categoryRow: {
     paddingRight: 10,
   },
   categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 18,
     backgroundColor: '#F1F5F9',
     marginRight: 8,
   },
@@ -440,7 +342,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.navyBlue,
   },
   categoryText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     color: '#64748B',
   },
@@ -449,31 +351,23 @@ const styles = StyleSheet.create({
   },
   listSection: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
   },
-  resultsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginVertical: 14,
+  resultsBar: {
+    marginVertical: 12,
   },
-  resultsCountText: {
-    fontSize: 15,
+  resultsCount: {
+    fontSize: 14,
     fontWeight: '700',
     color: colors.navyBlue,
   },
-  resetFiltersText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.orange,
-  },
   listContent: {
-    paddingBottom: 40,
+    paddingBottom: 30,
   },
   card: {
     backgroundColor: '#FFFFFF',
     borderRadius: 18,
-    marginBottom: 18,
+    marginBottom: 16,
     overflow: 'hidden',
     shadowColor: '#0F172A',
     shadowOffset: { width: 0, height: 4 },
@@ -484,7 +378,7 @@ const styles = StyleSheet.create({
     borderColor: '#F1F5F9',
   },
   imageContainer: {
-    height: 180,
+    height: 170,
     width: '100%',
     position: 'relative',
   },
@@ -497,13 +391,13 @@ const styles = StyleSheet.create({
     top: 12,
     left: 12,
     backgroundColor: 'rgba(11, 30, 54, 0.85)',
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: 10,
   },
   categoryBadgeText: {
     color: '#FFFFFF',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
   },
   favoriteBtn: {
@@ -537,16 +431,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: 8,
   },
   ratingText: {
     fontSize: 12,
     fontWeight: '700',
     color: '#D97706',
-    marginLeft: 4,
+    marginLeft: 3,
   },
   propertyTitle: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.navyBlue,
     marginBottom: 4,
@@ -579,38 +473,24 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.navyBlue,
     fontWeight: '600',
-    marginLeft: 6,
+    marginLeft: 5,
   },
   emptyContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 50,
-    paddingHorizontal: 20,
+    paddingVertical: 40,
   },
   emptyTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: colors.navyBlue,
-    marginTop: 16,
-    marginBottom: 8,
+    marginTop: 12,
+    marginBottom: 6,
   },
   emptySubtitle: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#64748B',
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  clearSearchBtn: {
-    backgroundColor: colors.orange,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  clearSearchBtnText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
   },
   scrollTopBtn: {
     position: 'absolute',
@@ -636,81 +516,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginLeft: 6,
   },
-  sheetTitle: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: colors.navyBlue,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  filterSectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.navyBlue,
-    marginBottom: 10,
-    marginTop: 8,
-  },
-  sheetCategoryRow: {
-    marginBottom: 16,
-  },
-  sheetCategoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: '#F1F5F9',
-    marginRight: 8,
-  },
-  sheetCategoryChipActive: {
-    backgroundColor: colors.orange,
-  },
-  sheetCategoryText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.navyBlue,
-  },
-  sheetCategoryTextActive: {
-    color: '#FFFFFF',
-  },
-  toggleContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 24,
-  },
-  toggleBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  toggleBtnActive: {
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  toggleText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#64748B',
-  },
-  toggleTextActive: {
-    color: colors.orange,
-  },
-  applyBtn: {
-    backgroundColor: colors.orange,
-    paddingVertical: 14,
-    borderRadius: 14,
-    alignItems: 'center',
-  },
-  applyBtnText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '700',
-  },
 });
 
-export default ExploreScreen;
+export default PropertyListScreen;

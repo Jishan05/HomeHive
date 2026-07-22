@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -9,15 +9,25 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
+import FocusAwareStatusBar from '../../components/common/FocusAwareStatusBar';
 import { colors } from '../../theme/colors';
 
 const VerifyOtpScreen = ({ route, navigation }: any) => {
-  const { phoneNumber } = route.params || { phoneNumber: '9999999999' };
+  const { phoneNumber } = route.params || { phoneNumber: '9876543210' };
   const [otp, setOtp] = useState(['', '', '', '']);
   const [loading, setLoading] = useState(false);
-  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(0);
+  const [timer, setTimer] = useState(30);
   const inputs = useRef<Array<TextInput | null>>([]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimer(prev => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleOtpChange = (value: string, index: number) => {
     const newOtp = [...otp];
@@ -43,172 +53,211 @@ const VerifyOtpScreen = ({ route, navigation }: any) => {
     }, 500);
   };
 
+  const handleResend = () => {
+    if (timer === 0) {
+      setTimer(30);
+      setOtp(['', '', '', '']);
+      inputs.current[0]?.focus();
+    }
+  };
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Icon name="arrow-back" size={24} color={colors.navyBlue} />
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={styles.safeArea}>
+      <FocusAwareStatusBar barStyle={'dark-content'} />
 
-      <View style={styles.content}>
-        <Text style={styles.title}>OTP Verification</Text>
-        <Text style={styles.subtitle}>
-          Enter the verification code we just sent on your phone number
-          <Text style={styles.highlightText}> +91 {phoneNumber}</Text>
-        </Text>
-
-        <View style={styles.otpContainer}>
-          {otp.map((digit, index) => (
-            <TextInput
-              key={index}
-              style={[
-                styles.otpInput,
-                focusedIndex === index && styles.otpInputFocused,
-                digit !== '' && styles.otpInputFilled,
-              ]}
-              keyboardType="number-pad"
-              maxLength={1}
-              value={digit}
-              onChangeText={(value) => handleOtpChange(value, index)}
-              onKeyPress={(e) => handleKeyPress(e, index)}
-              onFocus={() => setFocusedIndex(index)}
-              onBlur={() => setFocusedIndex(null)}
-              ref={(ref) => (inputs.current[index] = ref)}
-            />
-          ))}
-        </View>
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleVerify}
-          disabled={loading}
-          activeOpacity={0.8}
-        >
-          {loading ? (
-            <ActivityIndicator color={colors.primaryText} />
-          ) : (
-            <Text style={styles.buttonText}>Verify</Text>
-          )}
-        </TouchableOpacity>
-
-        <View style={styles.resendContainer}>
-          <Text style={styles.resendText}>Didn't receive the code? </Text>
-          <TouchableOpacity>
-            <Text style={styles.resendLink}>Resend</Text>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        {/* Top Header: Back Arrow & OTP Title in Single Row */}
+        <View style={styles.topHeaderRow}>
+          <TouchableOpacity
+            style={styles.backBtn}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Icon name="arrow-back" size={20} color={colors.navyBlue} />
           </TouchableOpacity>
+          <Text style={styles.headerTitle}>OTP Verification</Text>
+          <View style={{ width: 40 }} />
         </View>
-      </View>
-    </KeyboardAvoidingView>
+
+        <View style={styles.content}>
+          {/* Subtitle & Mobile Number Row */}
+          <Text style={styles.subtitle}>
+            Enter the 4-digit verification code sent to
+          </Text>
+
+          <View style={styles.phoneBadgeRow}>
+            <Text style={styles.phoneNumberText}>+91 {phoneNumber}</Text>
+            <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.7}>
+              <Icon name="create-outline" size={16} color={colors.orange} style={{ marginLeft: 6 }} />
+            </TouchableOpacity>
+          </View>
+
+          {/* 4-Box OTP Input */}
+          <View style={styles.otpContainer}>
+            {otp.map((digit, index) => (
+              <TextInput
+                key={index}
+                style={[
+                  styles.otpInput,
+                  focusedIndex === index && styles.otpInputFocused,
+                  digit !== '' && styles.otpInputFilled,
+                ]}
+                keyboardType="number-pad"
+                maxLength={1}
+                value={digit}
+                onChangeText={value => handleOtpChange(value, index)}
+                onKeyPress={e => handleKeyPress(e, index)}
+                onFocus={() => setFocusedIndex(index)}
+                onBlur={() => setFocusedIndex(null)}
+                ref={ref => (inputs.current[index] = ref)}
+              />
+            ))}
+          </View>
+
+          {/* Verify Button */}
+          <TouchableOpacity
+            style={styles.verifyBtn}
+            onPress={handleVerify}
+            disabled={loading}
+            activeOpacity={0.85}
+          >
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <View style={styles.btnRow}>
+                <Text style={styles.verifyBtnText}>Verify & Continue</Text>
+                <Icon name="arrow-forward" size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
+              </View>
+            )}
+          </TouchableOpacity>
+
+          {/* Resend Code Footer & Timer */}
+          <View style={styles.resendContainer}>
+            <Text style={styles.resendText}>Didn't receive the code? </Text>
+            {timer > 0 ? (
+              <Text style={styles.timerText}>Resend in {timer}s</Text>
+            ) : (
+              <TouchableOpacity onPress={handleResend} activeOpacity={0.7}>
+                <Text style={styles.resendLinkText}>Resend Now</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#FAFAFC', // Very light grey/white background
   },
-  header: {
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+  topHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
-  backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#FFFFFF',
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: colors.navyBlue,
+    letterSpacing: -0.3,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 30,
-    marginTop: 40,
-  },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255, 140, 0, 0.1)', // Light orange background
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 30,
-  },
-  title: {
-    fontSize: 28,
-    color: colors.navyBlue,
-    fontWeight: '800',
-    marginBottom: 10,
+    paddingHorizontal: 28,
+    paddingTop: 28,
   },
   subtitle: {
-    fontSize: 15,
-    color: colors.darkGrey,
-    marginBottom: 40,
-    lineHeight: 22,
+    fontSize: 14,
+    color: '#64748B',
+    lineHeight: 20,
   },
-  highlightText: {
-    fontWeight: '700',
+  phoneBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+    marginBottom: 36,
+  },
+  phoneNumberText: {
+    fontSize: 16,
+    fontWeight: '800',
     color: colors.navyBlue,
   },
   otpContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 40,
+    marginBottom: 32,
   },
   otpInput: {
-    width: 65,
-    height: 65,
-    borderRadius: 16,
-    fontSize: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    fontSize: 26,
     textAlign: 'center',
     color: colors.navyBlue,
-    fontWeight: 'bold',
-    backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 2,
+    fontWeight: '800',
+    backgroundColor: '#F8FAFC',
     borderWidth: 1.5,
-    borderColor: 'transparent',
+    borderColor: '#E2E8F0',
   },
   otpInputFocused: {
     borderColor: colors.orange,
+    backgroundColor: '#FFFFFF',
+    shadowColor: colors.orange,
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.15,
+    shadowRadius: 6,
+    elevation: 3,
   },
   otpInputFilled: {
-    backgroundColor: 'rgba(255, 140, 0, 0.05)',
-    borderColor: 'rgba(255, 140, 0, 0.3)',
+    backgroundColor: '#FFF7ED',
+    borderColor: colors.orange,
   },
-  button: {
-    backgroundColor: colors.navyBlue, // Use navy blue for a premium look
-    borderRadius: 16,
-    height: 60,
+  verifyBtn: {
+    backgroundColor: colors.orange,
+    borderRadius: 18,
+    height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 30,
-    shadowColor: colors.navyBlue,
-    shadowOffset: { width: 0, height: 6 },
+    marginBottom: 24,
+    shadowColor: colors.orange,
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  buttonText: {
-    color: colors.primaryText,
-    fontSize: 18,
-    fontWeight: 'bold',
-    letterSpacing: 1,
+  btnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  verifyBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 0.3,
   },
   resendContainer: {
     flexDirection: 'row',
@@ -216,13 +265,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   resendText: {
-    color: colors.darkGrey,
-    fontSize: 15,
+    color: '#64748B',
+    fontSize: 14,
   },
-  resendLink: {
+  timerText: {
+    color: colors.navyBlue,
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  resendLinkText: {
     color: colors.orange,
-    fontSize: 15,
-    fontWeight: 'bold',
+    fontSize: 14,
+    fontWeight: '800',
+    textDecorationLine: 'underline',
   },
 });
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../theme/colors';
 
 interface RecommendedCardProps {
@@ -17,8 +18,14 @@ interface RecommendedCardProps {
 }
 
 const RecommendedCard: React.FC<RecommendedCardProps> = ({ property }) => {
+  const navigation = useNavigation<any>();
+
   return (
-    <TouchableOpacity style={styles.card} activeOpacity={0.9}>
+    <TouchableOpacity
+      style={styles.card}
+      activeOpacity={0.9}
+      onPress={() => navigation.navigate('PropertyDetail', { property })}
+    >
       <Image source={{ uri: property.image }} style={styles.image} />
       
       <View style={styles.detailsContainer}>

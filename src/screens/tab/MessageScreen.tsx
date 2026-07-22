@@ -1,17 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, ScrollView,
-  StatusBar
+  View, Text, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, ScrollView, RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
+import FocusAwareStatusBar from '../../components/common/FocusAwareStatusBar';
+import MessageScreenSkeleton from '../../components/common/MessageScreenSkeleton';
 import { chatList } from '../../data/dummyData';
 import { colors } from '../../theme/colors';
 
 const MessageScreen = () => {
   const navigation = useNavigation<any>();
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 800); // 0.8s skeleton loader
+    return () => clearTimeout(timer);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setRefreshing(false);
+    }, 800);
+  }, []);
 
   const filteredChats = chatList.filter(chat =>
     chat.agentName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -71,15 +90,12 @@ const MessageScreen = () => {
 
   return (
     <>
-      <StatusBar barStyle={'dark-content'} />
+      <FocusAwareStatusBar barStyle={'dark-content'} />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.headerBackground}>
           {/* Inbox Header */}
           <View style={styles.inboxHeader}>
             <Text style={styles.inboxTitle}>Messages</Text>
-            <TouchableOpacity style={styles.moreBtn}>
-              <Icon name="options-outline" size={26} color={colors.secondaryText} />
-            </TouchableOpacity>
           </View>
 
           {/* Search Bar */}
@@ -112,13 +128,37 @@ const MessageScreen = () => {
 
         {/* Chat List */}
         <View style={styles.listContainer}>
-          <FlatList
-            data={filteredChats}
-            keyExtractor={(item) => item.id}
-            renderItem={renderChatItem}
-            contentContainerStyle={styles.listContent}
-            showsVerticalScrollIndicator={false}
-          />
+          {loading ? (
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
+                  colors={[colors.orange]}
+                  tintColor={colors.orange}
+                />
+              }
+            >
+              <MessageScreenSkeleton />
+            </ScrollView>
+          ) : (
+            <FlatList
+              data={filteredChats}
+              keyExtractor={(item) => item.id}
+              renderItem={renderChatItem}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
+                  colors={[colors.orange]}
+                  tintColor={colors.orange}
+                />
+              }
+            />
+          )}
         </View>
       </SafeAreaView>
     </>
