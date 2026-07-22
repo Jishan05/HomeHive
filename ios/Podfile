@@ -30,5 +30,22 @@ target 'HomeHive' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+    
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES'] = 'YES'
+        config.build_settings['GCC_TREAT_WARNINGS_AS_ERRORS'] = 'NO'
+        
+        if target.name == 'RNReanimated'
+          cflags = config.build_settings['WARNING_CFLAGS'] || []
+          if cflags.is_a?(String)
+            cflags = cflags + ' -Wno-error=return-type'
+          else
+            cflags << '-Wno-error=return-type'
+          end
+          config.build_settings['WARNING_CFLAGS'] = cflags
+        end
+      end
+    end
   end
 end
