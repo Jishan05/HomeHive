@@ -269,10 +269,11 @@ const ProfileScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.navyBlue,
   },
   scrollContent: {
     paddingBottom: 40,
+    backgroundColor: '#FFFFFF',
   },
   coverContainer: {
     height: 190,
@@ -427,9 +428,9 @@ const styles = StyleSheet.create({
   fullDivider: {
     height: 8,
     backgroundColor: '#F8FAFC',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#F1F5F9',
+    borderTopWidth: 0.3,
+    borderBottomWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   menuGroup: {
     paddingTop: 16,

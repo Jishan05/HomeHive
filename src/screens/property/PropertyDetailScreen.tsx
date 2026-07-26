@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Share,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -57,9 +58,20 @@ const PropertyDetailScreen = ({ route, navigation }: any) => {
     category: 'Apartment',
   };
 
+  const allImages = [item.image, ...GALLERY_IMAGES];
   const [activeImage, setActiveImage] = useState(item.image);
   const [isFavorite, setIsFavorite] = useState(item.isFavorite || false);
   const [activeTab, setActiveTab] = useState<'overview' | 'amenities' | 'location'>('overview');
+  const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const handleOpenFullGallery = (initialIdx: number = 0) => {
+    navigation.navigate('FullGallery', {
+      images: allImages,
+      initialIndex: initialIdx,
+      title: item.title,
+    });
+  };
 
   const handleShare = async () => {
     try {
@@ -94,11 +106,23 @@ const PropertyDetailScreen = ({ route, navigation }: any) => {
       >
         {/* Hero Image Section */}
         <View style={styles.heroContainer}>
-          <Image source={{ uri: activeImage }} style={styles.heroImage} />
+          <TouchableOpacity
+            activeOpacity={0.95}
+            style={{ width: '100%', height: '100%' }}
+            onPress={() => handleOpenFullGallery(allImages.indexOf(activeImage))}
+          >
+            <Image source={{ uri: activeImage }} style={styles.heroImage} />
+
+            {/* Expand Zoom Badge Indicator */}
+            <View style={styles.expandBadge}>
+              <Icon name="expand" size={13} color="#FFFFFF" />
+              <Text style={styles.expandBadgeText}>Tap to View</Text>
+            </View>
+          </TouchableOpacity>
 
           {/* Top Bar Actions */}
-          <SafeAreaView edges={['top']} style={styles.topBarSafeArea}>
-            <View style={styles.topBar}>
+          <SafeAreaView edges={['top']} style={styles.topBarSafeArea} pointerEvents="box-none">
+            <View style={styles.topBar} pointerEvents="box-none">
               <TouchableOpacity
                 style={styles.circleBtn}
                 onPress={() => navigation.goBack()}
@@ -132,7 +156,7 @@ const PropertyDetailScreen = ({ route, navigation }: any) => {
           </SafeAreaView>
 
           {/* Badges Overlay */}
-          <View style={styles.badgeRowOverlay}>
+          <View style={styles.badgeRowOverlay} pointerEvents="none">
             {item.category && (
               <View style={styles.categoryBadge}>
                 <Text style={styles.categoryText}>{item.category}</Text>
@@ -148,13 +172,16 @@ const PropertyDetailScreen = ({ route, navigation }: any) => {
         {/* Gallery Thumbnails Strip */}
         <View style={styles.galleryStrip}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.galleryContent}>
-            {[item.image, ...GALLERY_IMAGES].map((imgUrl, idx) => {
+            {allImages.map((imgUrl, idx) => {
               const isSelected = activeImage === imgUrl;
               return (
                 <TouchableOpacity
                   key={idx}
                   style={[styles.thumbWrapper, isSelected && styles.thumbWrapperActive]}
-                  onPress={() => setActiveImage(imgUrl)}
+                  onPress={() => {
+                    setActiveImage(imgUrl);
+                    handleOpenFullGallery(idx);
+                  }}
                   activeOpacity={0.8}
                 >
                   <Image source={{ uri: imgUrl }} style={styles.thumbImage} />
@@ -171,8 +198,8 @@ const PropertyDetailScreen = ({ route, navigation }: any) => {
           <View style={styles.mainInfoCard}>
             <View style={styles.ratingPriceRow}>
               <View style={styles.ratingBadge}>
-                <Icon name="star" size={13} color="#FBBF24" />
-                <Text style={styles.ratingText}>4.9 (128 Reviews)</Text>
+                <Icon name="star" size={12} color="#F59E0B" />
+                <Text style={styles.ratingText}>4.9 (128 reviews)</Text>
               </View>
               <Text style={styles.priceText}>{item.price}</Text>
             </View>
@@ -180,7 +207,7 @@ const PropertyDetailScreen = ({ route, navigation }: any) => {
             <Text style={styles.propertyTitle}>{item.title}</Text>
 
             <View style={styles.locationRow}>
-              <Icon name="location" size={16} color={colors.orange} />
+              <Icon name="location-outline" size={14} color="#64748B" />
               <Text style={styles.locationText}>{item.location}</Text>
             </View>
           </View>
@@ -456,16 +483,11 @@ const styles = StyleSheet.create({
   },
   mainInfoCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 16,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 14,
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   ratingPriceRow: {
     flexDirection: 'row',
@@ -476,37 +498,39 @@ const styles = StyleSheet.create({
   ratingBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   ratingText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#D97706',
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#0F172A',
     marginLeft: 4,
   },
   priceText: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '800',
     color: colors.orange,
   },
   propertyTitle: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 18,
+    fontWeight: '700',
     color: colors.navyBlue,
     marginBottom: 6,
-    letterSpacing: -0.3,
+    letterSpacing: -0.2,
   },
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   locationText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#64748B',
-    marginLeft: 6,
+    marginLeft: 4,
     fontWeight: '500',
   },
   specsCard: {
@@ -518,13 +542,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   specBox: {
     alignItems: 'center',
@@ -562,11 +581,8 @@ const styles = StyleSheet.create({
   },
   tabBtnActive: {
     backgroundColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   tabText: {
     fontSize: 13,
@@ -582,8 +598,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     marginBottom: 20,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   sectionContainer: {
     marginBottom: 20,
@@ -630,8 +646,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 14,
     margin: 4,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
     width: (width - 76) / 2,
   },
   amenityText: {
@@ -678,13 +694,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 14,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   agentAvatar: {
     width: 52,
@@ -727,11 +738,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.orange,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: colors.orange,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 3,
   },
   bottomSafeArea: {
     position: 'absolute',
@@ -739,13 +745,8 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 10,
+    borderTopWidth: 0.3,
+    borderTopColor: '#CBD5E1',
   },
   bottomBar: {
     flexDirection: 'row',
@@ -787,16 +788,110 @@ const styles = StyleSheet.create({
     paddingHorizontal: 22,
     paddingVertical: 14,
     borderRadius: 16,
-    shadowColor: colors.orange,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
   },
   bookBtnText: {
     color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '800',
+  },
+  expandBadge: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(11, 30, 54, 0.75)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+    zIndex: 5,
+  },
+  expandBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+    marginLeft: 4,
+  },
+  viewerContainer: {
+    flex: 1,
+    backgroundColor: '#000000',
+    justifyContent: 'space-between',
+  },
+  viewerHeaderSafeArea: {
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    zIndex: 10,
+  },
+  viewerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  viewerCloseBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  viewerCounterBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  viewerCounterText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  viewerScrollView: {
+    flex: 1,
+  },
+  viewerImageWrapper: {
+    width: width,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  viewerFullImage: {
+    width: '100%',
+    height: '100%',
+  },
+  viewerFooterSafeArea: {
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingVertical: 12,
+  },
+  viewerTitleText: {
+    color: '#FFFFFF',
+    fontSize: 14,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginBottom: 8,
+    paddingHorizontal: 20,
+  },
+  viewerThumbList: {
+    paddingHorizontal: 16,
+  },
+  viewerThumbItem: {
+    width: 64,
+    height: 46,
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginRight: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
+    opacity: 0.6,
+  },
+  viewerThumbItemActive: {
+    borderColor: colors.orange,
+    opacity: 1,
+  },
+  viewerThumbImg: {
+    width: '100%',
+    height: '100%',
   },
 });
 

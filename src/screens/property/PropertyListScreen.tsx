@@ -161,7 +161,7 @@ const PropertyListScreen = ({ route, navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <FocusAwareStatusBar barStyle={'dark-content'} />
 
       {/* Modern Top Header */}
@@ -369,13 +369,8 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     marginBottom: 16,
     overflow: 'hidden',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   imageContainer: {
     height: 170,

@@ -10,7 +10,7 @@ import {
   ScrollView,
   RefreshControl,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import FocusAwareStatusBar from '../../components/common/FocusAwareStatusBar';
@@ -32,6 +32,8 @@ const ExploreScreen = () => {
   const [selectedType, setSelectedType] = useState<'All' | 'Buy' | 'Rent'>('All');
   const [showScrollTop, setShowScrollTop] = useState(false);
   const flatListRef = useRef<FlatList>(null);
+
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -165,208 +167,215 @@ const ExploreScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <View style={styles.safeArea}>
       <FocusAwareStatusBar barStyle={'dark-content'} />
 
-      {/* Header & Search Bar */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Explore Properties</Text>
-        <Text style={styles.headerSubtitle}>Find your perfect home or investment</Text>
+      <View style={[styles.container, { paddingTop: insets.top }]}>
+        {/* Header & Search Bar */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Explore Properties</Text>
+          <Text style={styles.headerSubtitle}>Find your perfect home or investment</Text>
 
-        <View style={styles.searchRow}>
-          <View style={styles.searchContainer}>
-            <Icon name="search" size={20} color="#94A3B8" style={styles.searchIcon} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search by city, title or type..."
-              placeholderTextColor="#94A3B8"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              clearButtonMode="while-editing"
-            />
-            {searchQuery.length > 0 && (
-              <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearBtn}>
-                <Icon name="close-circle" size={18} color="#94A3B8" />
-              </TouchableOpacity>
-            )}
-          </View>
-
-          <TouchableOpacity
-            style={[
-              styles.filterBtn,
-              (selectedCategory !== 'All' || selectedType !== 'All') && styles.filterBtnActive,
-            ]}
-            onPress={() => setFilterVisible(true)}
-            activeOpacity={0.8}
-          >
-            <Icon
-              name="options-outline"
-              size={22}
-              color={selectedCategory !== 'All' || selectedType !== 'All' ? '#FFFFFF' : colors.navyBlue}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Categories Bar */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoriesContainer}
-        >
-          {CATEGORIES.map(cat => {
-            const isSelected = selectedCategory === cat;
-            return (
-              <TouchableOpacity
-                key={cat}
-                style={[styles.categoryChip, isSelected && styles.categoryChipActive]}
-                onPress={() => setSelectedCategory(cat)}
-                activeOpacity={0.7}
-              >
-                <Text style={[styles.categoryText, isSelected && styles.categoryTextActive]}>
-                  {cat}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </View>
-
-      {/* Main Properties List */}
-      <View style={styles.listSection}>
-        {loading ? (
-          <ExploreScreenSkeleton />
-        ) : (
-          <>
-            <View style={styles.resultsHeader}>
-              <Text style={styles.resultsCountText}>
-                {filteredProperties.length} {filteredProperties.length === 1 ? 'Property' : 'Properties'} Found
-              </Text>
-
-              {(searchQuery !== '' || selectedCategory !== 'All') && (
-                <TouchableOpacity
-                  onPress={() => {
-                    setSearchQuery('');
-                    setSelectedCategory('All');
-                  }}
-                >
-                  <Text style={styles.resetFiltersText}>Reset Filters</Text>
+          <View style={styles.searchRow}>
+            <View style={styles.searchContainer}>
+              <Icon name="search" size={20} color="#94A3B8" style={styles.searchIcon} />
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search by city, title or type..."
+                placeholderTextColor="#94A3B8"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                clearButtonMode="while-editing"
+              />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')} style={styles.clearBtn}>
+                  <Icon name="close-circle" size={18} color="#94A3B8" />
                 </TouchableOpacity>
               )}
             </View>
 
-            <FlatList
-              ref={flatListRef}
-              data={filteredProperties}
-              keyExtractor={item => item.id}
-              renderItem={renderPropertyItem}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={styles.listContent}
-              onScroll={handleScroll}
-              scrollEventThrottle={16}
-              refreshControl={
-                <RefreshControl
-                  refreshing={refreshing}
-                  onRefresh={handleRefresh}
-                  colors={[colors.orange]}
-                  tintColor={colors.orange}
-                />
-              }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Icon name="search-outline" size={60} color="#CBD5E1" />
-              <Text style={styles.emptyTitle}>No Properties Found</Text>
-              <Text style={styles.emptySubtitle}>
-                We couldn't find any results matching "{searchQuery}". Try searching for a different city or category.
-              </Text>
-              <TouchableOpacity
-                style={styles.clearSearchBtn}
-                onPress={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('All');
-                }}
-              >
-                <Text style={styles.clearSearchBtnText}>Clear Search</Text>
-              </TouchableOpacity>
-            </View>
-          }
-        />
-        </>
-      )}
-
-        {/* Scroll to Top FAB Button */}
-        {showScrollTop && (
-          <TouchableOpacity
-            style={styles.scrollTopBtn}
-            onPress={scrollToTop}
-            activeOpacity={0.8}
-          >
-            <Icon name="arrow-up" size={18} color="#FFFFFF" />
-            <Text style={styles.scrollTopText}>Top</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {/* Filter Bottom Sheet */}
-      <BottomSheet
-        visible={filterVisible}
-        onClose={() => setFilterVisible(false)}
-        height={380}
-      >
-        <Text style={styles.sheetTitle}>Filter Properties</Text>
-
-        <Text style={styles.filterSectionTitle}>Category</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sheetCategoryRow}>
-          {CATEGORIES.map(cat => (
             <TouchableOpacity
-              key={cat}
               style={[
-                styles.sheetCategoryChip,
-                selectedCategory === cat && styles.sheetCategoryChipActive,
+                styles.filterBtn,
+                (selectedCategory !== 'All' || selectedType !== 'All') && styles.filterBtnActive,
               ]}
-              onPress={() => setSelectedCategory(cat)}
+              onPress={() => setFilterVisible(true)}
+              activeOpacity={0.8}
             >
-              <Text
-                style={[
-                  styles.sheetCategoryText,
-                  selectedCategory === cat && styles.sheetCategoryTextActive,
-                ]}
-              >
-                {cat}
-              </Text>
+              <Icon
+                name="options-outline"
+                size={22}
+                color={selectedCategory !== 'All' || selectedType !== 'All' ? '#FFFFFF' : colors.navyBlue}
+              />
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+          </View>
 
-        <Text style={styles.filterSectionTitle}>Property Type</Text>
-        <View style={styles.toggleContainer}>
-          {(['All', 'Buy', 'Rent'] as const).map(type => (
-            <TouchableOpacity
-              key={type}
-              style={[styles.toggleBtn, selectedType === type && styles.toggleBtnActive]}
-              onPress={() => setSelectedType(type)}
-            >
-              <Text style={[styles.toggleText, selectedType === type && styles.toggleTextActive]}>
-                {type}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          {/* Categories Bar */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.categoriesContainer}
+          >
+            {CATEGORIES.map(cat => {
+              const isSelected = selectedCategory === cat;
+              return (
+                <TouchableOpacity
+                  key={cat}
+                  style={[styles.categoryChip, isSelected && styles.categoryChipActive]}
+                  onPress={() => setSelectedCategory(cat)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[styles.categoryText, isSelected && styles.categoryTextActive]}>
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
 
-        <TouchableOpacity
-          style={styles.applyBtn}
-          onPress={() => setFilterVisible(false)}
+        {/* Main Properties List */}
+        <View style={styles.listSection}>
+          {loading ? (
+            <ExploreScreenSkeleton />
+          ) : (
+            <>
+              <View style={styles.resultsHeader}>
+                <Text style={styles.resultsCountText}>
+                  {filteredProperties.length} {filteredProperties.length === 1 ? 'Property' : 'Properties'} Found
+                </Text>
+
+                {(searchQuery !== '' || selectedCategory !== 'All') && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSearchQuery('');
+                      setSelectedCategory('All');
+                    }}
+                  >
+                    <Text style={styles.resetFiltersText}>Reset Filters</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <FlatList
+                ref={flatListRef}
+                data={filteredProperties}
+                keyExtractor={item => item.id}
+                renderItem={renderPropertyItem}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.listContent}
+                onScroll={handleScroll}
+                scrollEventThrottle={16}
+                refreshControl={
+                  <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={handleRefresh}
+                    colors={[colors.orange]}
+                    tintColor={colors.orange}
+                  />
+                }
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Icon name="search-outline" size={60} color="#CBD5E1" />
+                    <Text style={styles.emptyTitle}>No Properties Found</Text>
+                    <Text style={styles.emptySubtitle}>
+                      We couldn't find any results matching "{searchQuery}". Try searching for a different city or category.
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.clearSearchBtn}
+                      onPress={() => {
+                        setSearchQuery('');
+                        setSelectedCategory('All');
+                      }}
+                    >
+                      <Text style={styles.clearSearchBtnText}>Clear Search</Text>
+                    </TouchableOpacity>
+                  </View>
+                }
+              />
+            </>
+          )}
+
+          {/* Scroll to Top FAB Button */}
+          {showScrollTop && (
+            <TouchableOpacity
+              style={styles.scrollTopBtn}
+              onPress={scrollToTop}
+              activeOpacity={0.8}
+            >
+              <Icon name="arrow-up" size={18} color="#FFFFFF" />
+              <Text style={styles.scrollTopText}>Top</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Filter Bottom Sheet */}
+        <BottomSheet
+          visible={filterVisible}
+          onClose={() => setFilterVisible(false)}
+          height={380}
         >
-          <Text style={styles.applyBtnText}>Apply Filters</Text>
-        </TouchableOpacity>
-      </BottomSheet>
-    </SafeAreaView>
+          <Text style={styles.sheetTitle}>Filter Properties</Text>
+
+          <Text style={styles.filterSectionTitle}>Category</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.sheetCategoryRow}>
+            {CATEGORIES.map(cat => (
+              <TouchableOpacity
+                key={cat}
+                style={[
+                  styles.sheetCategoryChip,
+                  selectedCategory === cat && styles.sheetCategoryChipActive,
+                ]}
+                onPress={() => setSelectedCategory(cat)}
+              >
+                <Text
+                  style={[
+                    styles.sheetCategoryText,
+                    selectedCategory === cat && styles.sheetCategoryTextActive,
+                  ]}
+                >
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+
+          <Text style={styles.filterSectionTitle}>Property Type</Text>
+          <View style={styles.toggleContainer}>
+            {(['All', 'Buy', 'Rent'] as const).map(type => (
+              <TouchableOpacity
+                key={type}
+                style={[styles.toggleBtn, selectedType === type && styles.toggleBtnActive]}
+                onPress={() => setSelectedType(type)}
+              >
+                <Text style={[styles.toggleText, selectedType === type && styles.toggleTextActive]}>
+                  {type}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <TouchableOpacity
+            style={styles.applyBtn}
+            onPress={() => setFilterVisible(false)}
+          >
+            <Text style={styles.applyBtnText}>Apply Filters</Text>
+          </TouchableOpacity>
+        </BottomSheet>
+      </View>
+
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: colors.navyBlue,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
   },
   header: {
     paddingHorizontal: 20,
@@ -475,13 +484,8 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     marginBottom: 18,
     overflow: 'hidden',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 10,
-    elevation: 3,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   imageContainer: {
     height: 180,

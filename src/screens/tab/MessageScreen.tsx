@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity, Image, TextInput, ScrollView, RefreshControl,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import FocusAwareStatusBar from '../../components/common/FocusAwareStatusBar';
@@ -15,6 +15,7 @@ const MessageScreen = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const insets = useSafeAreaInsets()
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -71,7 +72,7 @@ const MessageScreen = () => {
           <Text style={styles.timeText}>{item.time}</Text>
         </View>
         <View style={styles.propertyChip}>
-          <Icon name="home" size={10} color={colors.orange} style={{ marginRight: 4 }} />
+          <Icon name="home" size={10} color="#475569" style={{ marginRight: 4 }} />
           <Text style={styles.propertyTitle} numberOfLines={1}>{item.propertyTitle}</Text>
         </View>
         <View style={styles.lastMessageRow}>
@@ -89,9 +90,13 @@ const MessageScreen = () => {
   );
 
   return (
-    <>
+
+    <View style={styles.safeArea}>
+
+
       <FocusAwareStatusBar barStyle={'dark-content'} />
-      <SafeAreaView style={styles.safeArea}>
+
+      <View style={[styles.container, { paddingTop: insets.top }]}>
         <View style={styles.headerBackground}>
           {/* Inbox Header */}
           <View style={styles.inboxHeader}>
@@ -160,13 +165,18 @@ const MessageScreen = () => {
             />
           )}
         </View>
-      </SafeAreaView>
-    </>
+      </View>
+    </View>
+
   );
 };
 
 const styles = StyleSheet.create({
   safeArea: {
+    flex: 1,
+    backgroundColor: colors.navyBlue,
+  },
+  container: {
     flex: 1,
     backgroundColor: '#ffffff',
   },
@@ -196,28 +206,28 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#F8FAFC',
     marginHorizontal: 24,
     borderRadius: 16,
     paddingHorizontal: 16,
-    height: 52,
+    height: 48,
     marginBottom: 20,
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   searchInput: {
     flex: 1,
-    marginLeft: 12,
-    fontSize: 16,
-    color: colors.secondaryText,
-    opacity: 0.8,
+    marginLeft: 10,
+    fontSize: 15,
+    color: colors.navyBlue,
   },
   activeSection: {
     marginBottom: 5,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '700',
-    color: colors.secondaryText,
-    opacity: 0.5,
+    color: '#94A3B8',
     marginHorizontal: 24,
     marginBottom: 12,
     textTransform: 'uppercase',
@@ -259,8 +269,7 @@ const styles = StyleSheet.create({
   activeAgentName: {
     fontSize: 12,
     fontWeight: '600',
-    color: colors.secondaryText,
-    opacity: 0.8,
+    color: colors.navyBlue,
   },
   listContainer: {
     flex: 1,
@@ -273,33 +282,33 @@ const styles = StyleSheet.create({
   chatCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    paddingVertical: 14,
+    borderBottomWidth: 0.3,
+    borderBottomColor: '#CBD5E1',
   },
   avatarContainer: {
     position: 'relative',
   },
   avatar: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: '#e2e8f0',
   },
   onlineDot: {
     position: 'absolute',
     top: 2,
     right: 2,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 13,
+    height: 13,
+    borderRadius: 6.5,
     backgroundColor: '#22c55e',
     borderWidth: 2,
     borderColor: '#ffffff',
   },
   chatInfo: {
     flex: 1,
-    marginLeft: 16,
+    marginLeft: 14,
   },
   chatHeader: {
     flexDirection: 'row',
@@ -308,29 +317,30 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   agentName: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: colors.secondaryText,
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.navyBlue,
   },
   timeText: {
-    fontSize: 12,
-    color: colors.secondaryText,
-    opacity: 0.4,
+    fontSize: 11,
+    color: '#94A3B8',
     fontWeight: '600',
   },
   propertyChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 140, 0, 0.1)', // Very light orange tint
+    backgroundColor: '#F8FAFC',
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: 6,
     alignSelf: 'flex-start',
-    marginBottom: 8,
+    marginBottom: 6,
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   propertyTitle: {
     fontSize: 11,
-    color: colors.orange,
+    color: '#475569',
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
@@ -342,31 +352,26 @@ const styles = StyleSheet.create({
   },
   lastMessage: {
     flex: 1,
-    fontSize: 14,
-    color: colors.secondaryText,
-    opacity: 0.5,
+    fontSize: 13,
+    color: '#64748B',
     marginRight: 10,
     fontWeight: '400',
   },
   lastMessageUnread: {
-    opacity: 0.9,
-    fontWeight: '600', // Bold unread messages
+    color: colors.navyBlue,
+    fontWeight: '700',
   },
   unreadBadge: {
-    backgroundColor: colors.orange,
+    backgroundColor: '#0F172A',
     borderRadius: 12,
     paddingHorizontal: 8,
-    paddingVertical: 3,
-    minWidth: 24,
+    paddingVertical: 2,
+    minWidth: 22,
     alignItems: 'center',
-    shadowColor: colors.orange,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
   },
   unreadText: {
     color: '#ffffff',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
   },
 });

@@ -1,15 +1,25 @@
 import React, { memo } from 'react';
-import { View, Image, StyleSheet, TouchableOpacity, Text, TextInput } from 'react-native';
+import { View, Image, StyleSheet, TouchableOpacity, Text, TextInput, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation } from '@react-navigation/native';
 import { useModeStore } from '../../store/useModeStore';
 import { colors } from '../../theme/colors';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isSmallDevice = SCREEN_WIDTH < 375;
+const isTablet = SCREEN_WIDTH >= 768;
+
+// Dynamic responsive sizing calculations
+const logoWidth = Math.min(SCREEN_WIDTH * 0.46, isTablet ? 260 : 190);
+const logoHeight = (logoWidth * 56) / 215;
+
 interface HomeHeaderProps {
   onFilterPress?: () => void;
+  location?: string;
+  onLocationPress?: () => void;
 }
 
-const HomeHeader: React.FC<HomeHeaderProps> = ({ onFilterPress }) => {
+const HomeHeader: React.FC<HomeHeaderProps> = ({ onFilterPress, location = 'London, UK', onLocationPress }) => {
   const navigation = useNavigation<any>();
   const mode = useModeStore(state => state.mode);
   const setMode = useModeStore(state => state.setMode);
@@ -20,7 +30,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({ onFilterPress }) => {
       <View style={styles.topRow}>
         <Image
           source={require('../../assets/images/Logo.png')}
-          style={styles.logo}
+          style={[styles.logo, { width: logoWidth, height: logoHeight }]}
           resizeMode="contain"
         />
 
@@ -50,7 +60,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({ onFilterPress }) => {
             activeOpacity={0.8}
             onPress={() => navigation.navigate('Notification')}
           >
-            <Icon name="notifications-outline" size={18} color="#FFFFFF" />
+            <Icon name="notifications-outline" size={isSmallDevice ? 16 : 18} color="#FFFFFF" />
             <View style={styles.unreadDot} />
           </TouchableOpacity>
         </View>
@@ -58,26 +68,28 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({ onFilterPress }) => {
 
       {/* Row 2: Location Selector Bar */}
       <View style={styles.locationRow}>
-        <TouchableOpacity style={styles.locationBadge} activeOpacity={0.8}>
-          <Icon name="location" size={14} color={colors.orange} />
+        <TouchableOpacity style={styles.locationBadge} activeOpacity={0.8} onPress={onLocationPress}>
+          <Icon name="location" size={isSmallDevice ? 12 : 14} color={colors.orange} />
           <Text style={styles.locationLabel}>Location:</Text>
-          <Text style={styles.locationText}>London, UK</Text>
+          <Text style={styles.locationText}>{location}</Text>
           <Icon name="chevron-down" size={12} color="#94A3B8" style={{ marginLeft: 2 }} />
         </TouchableOpacity>
       </View>
 
       {/* Row 3: Search Input & Filter Button */}
       <View style={styles.searchRow}>
-        <View style={styles.searchContainer}>
-          <Icon name="search-outline" size={18} color="rgba(255, 255, 255, 0.7)" style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={mode === 'Buy' ? "Search homes to buy..." : "Search homes for rent..."}
-            placeholderTextColor="rgba(255, 255, 255, 0.5)"
-          />
-        </View>
+        <TouchableOpacity 
+          style={styles.searchContainer} 
+          activeOpacity={0.8}
+          onPress={() => navigation.navigate('SearchScreen')}
+        >
+          <Icon name="search-outline" size={isSmallDevice ? 16 : 18} color="rgba(255, 255, 255, 0.7)" style={styles.searchIcon} />
+          <Text style={styles.fakeInputText}>
+            {mode === 'Buy' ? "Search homes to buy..." : "Search homes for rent..."}
+          </Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.filterBtn} onPress={onFilterPress} activeOpacity={0.8}>
-          <Icon name="options-outline" size={20} color="#FFFFFF" />
+          <Icon name="options-outline" size={isSmallDevice ? 18 : 20} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
     </View>
@@ -86,7 +98,7 @@ const HomeHeader: React.FC<HomeHeaderProps> = ({ onFilterPress }) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 16,
+    paddingHorizontal: Math.min(SCREEN_WIDTH * 0.04, 20),
     paddingTop: 6,
     paddingBottom: 12,
     backgroundColor: colors.navyBlue,
@@ -98,9 +110,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   logo: {
-    width: 215,
-    height: 56,
-    left: -25,
+    left: isSmallDevice ? -12 : -20,
   },
   rightActionsRow: {
     flexDirection: 'row',
@@ -111,12 +121,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
     borderRadius: 14,
     padding: 3,
-    marginRight: 8,
+    marginRight: isSmallDevice ? 4 : 8,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.18)',
   },
   modeBtn: {
-    paddingHorizontal: 12,
+    paddingHorizontal: isSmallDevice ? 8 : 12,
     paddingVertical: 5,
     borderRadius: 11,
   },
@@ -129,7 +139,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   modeText: {
-    fontSize: 12,
+    fontSize: isSmallDevice ? 11 : 12,
     fontWeight: '700',
     color: '#94A3B8',
   },
@@ -138,9 +148,9 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   notificationBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: isSmallDevice ? 32 : 36,
+    height: isSmallDevice ? 32 : 36,
+    borderRadius: isSmallDevice ? 16 : 18,
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -150,8 +160,8 @@ const styles = StyleSheet.create({
   },
   unreadDot: {
     position: 'absolute',
-    top: 7,
-    right: 7,
+    top: isSmallDevice ? 5 : 7,
+    right: isSmallDevice ? 5 : 7,
     width: 6,
     height: 6,
     borderRadius: 3,
@@ -167,21 +177,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingHorizontal: 10,
+    paddingHorizontal: isSmallDevice ? 8 : 10,
     paddingVertical: 5,
     borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   locationLabel: {
-    fontSize: 11,
+    fontSize: isSmallDevice ? 10 : 11,
     color: '#94A3B8',
     fontWeight: '500',
     marginLeft: 4,
     marginRight: 3,
   },
   locationText: {
-    fontSize: 12,
+    fontSize: isSmallDevice ? 11 : 12,
     fontWeight: '700',
     color: '#FFFFFF',
   },
@@ -195,25 +205,23 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
     borderRadius: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: isSmallDevice ? 10 : 12,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.18)',
-    height: 42,
+    height: isSmallDevice ? 38 : 42,
   },
   searchIcon: {
     marginRight: 6,
   },
-  searchInput: {
+  fakeInputText: {
     flex: 1,
-    color: '#FFFFFF',
-    fontSize: 13,
-    height: '100%',
-    paddingVertical: 0,
+    color: 'rgba(255, 255, 255, 0.5)',
+    fontSize: isSmallDevice ? 12 : 13,
   },
   filterBtn: {
     marginLeft: 8,
-    width: 42,
-    height: 42,
+    width: isSmallDevice ? 38 : 42,
+    height: isSmallDevice ? 38 : 42,
     borderRadius: 12,
     backgroundColor: colors.orange,
     justifyContent: 'center',

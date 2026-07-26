@@ -5,6 +5,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import FocusAwareStatusBar from '../../components/common/FocusAwareStatusBar';
 import { chatMessages } from '../../data/dummyData';
 import { colors } from '../../theme/colors';
 
@@ -23,6 +24,22 @@ const ChatDetailScreen = () => {
       </SafeAreaView>
     );
   }
+
+  const handleViewPropertyDetails = () => {
+    const propertyData = selectedChat.property || {
+      id: 'chat_prop_' + selectedChat.id,
+      title: selectedChat.propertyTitle,
+      location: selectedChat.propertyLocation || 'Paris, France',
+      price: selectedChat.propertyPrice || '$1,250,000',
+      beds: 3,
+      baths: 2,
+      sqft: '2,400',
+      image: selectedChat.propertyImage,
+      isFavorite: false,
+      category: 'Apartment',
+    };
+    (navigation as any).navigate('PropertyDetail', { property: propertyData });
+  };
 
   const sendMessage = () => {
     if (!inputText.trim()) return;
@@ -56,11 +73,13 @@ const ChatDetailScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <FocusAwareStatusBar barStyle={'dark-content'} />
+
       {/* Chat Detail Header */}
       <View style={styles.detailHeader}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Icon name="arrow-back" size={24} color={colors.secondaryText} />
+          <Icon name="arrow-back" size={22} color={colors.navyBlue} />
         </TouchableOpacity>
         <View style={styles.headerTitleContainer}>
           <Text style={styles.headerName}>{selectedChat.agentName}</Text>
@@ -68,48 +87,55 @@ const ChatDetailScreen = () => {
         </View>
       </View>
 
-      {/* Property Context Card */}
-      <View style={styles.contextCard}>
-        <Image source={{ uri: selectedChat.propertyImage }} style={styles.contextImage} />
-        <View style={styles.contextInfo}>
-          <Text style={styles.contextTitle} numberOfLines={1}>{selectedChat.propertyTitle}</Text>
-          <Text style={styles.contextAction}>View Details <Icon name="chevron-forward" size={12} /></Text>
-        </View>
-      </View>
-
-      {/* Messages List */}
-      <FlatList
-        data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={renderMessageBubble}
-        contentContainerStyle={styles.messagesList}
-        showsVerticalScrollIndicator={false}
-      />
-
-      {/* Input Area */}
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        style={styles.keyboardAvoid}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : -45}
       >
-        <View style={styles.inputContainer}>
-          <TouchableOpacity style={styles.attachBtn}>
-            <Icon name="add" size={24} color={colors.secondaryText} />
-          </TouchableOpacity>
-          <TextInput
-            style={styles.textInput}
-            placeholder="Type a message..."
-            placeholderTextColor={colors.secondaryText}
-            value={inputText}
-            onChangeText={setInputText}
-            multiline
-          />
-          <TouchableOpacity
-            style={[styles.sendBtn, inputText.trim().length > 0 && styles.sendBtnActive]}
-            onPress={sendMessage}
-          >
-            <Icon name="send" size={18} color="#ffffff" />
-          </TouchableOpacity>
-        </View>
+        {/* Property Context Card */}
+        <TouchableOpacity
+          style={styles.contextCard}
+          activeOpacity={0.8}
+          onPress={handleViewPropertyDetails}
+        >
+          <Image source={{ uri: selectedChat.propertyImage }} style={styles.contextImage} />
+          <View style={styles.contextInfo}>
+            <Text style={styles.contextTitle} numberOfLines={1}>{selectedChat.propertyTitle}</Text>
+            <Text style={styles.contextAction}>View Details <Icon name="chevron-forward" size={12} /></Text>
+          </View>
+        </TouchableOpacity>
+
+        {/* Messages List */}
+        <FlatList
+          data={messages}
+          keyExtractor={(item) => item.id}
+          renderItem={renderMessageBubble}
+          contentContainerStyle={styles.messagesList}
+          showsVerticalScrollIndicator={false}
+        />
+
+        {/* Input Area */}
+        <SafeAreaView edges={['bottom']} style={styles.bottomSafeArea}>
+          <View style={styles.inputContainer}>
+            <TouchableOpacity style={styles.attachBtn}>
+              <Icon name="add" size={22} color={colors.navyBlue} />
+            </TouchableOpacity>
+            <TextInput
+              style={styles.textInput}
+              placeholder="Type a message..."
+              placeholderTextColor="#94A3B8"
+              value={inputText}
+              onChangeText={setInputText}
+              multiline
+            />
+            <TouchableOpacity
+              style={[styles.sendBtn, inputText.trim().length > 0 && styles.sendBtnActive]}
+              onPress={sendMessage}
+            >
+              <Icon name="send" size={18} color="#ffffff" />
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -118,56 +144,55 @@ const ChatDetailScreen = () => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#F8FAFC',
+  },
+  keyboardAvoid: {
+    flex: 1,
+  },
+  bottomSafeArea: {
+    backgroundColor: '#FFFFFF',
   },
   detailHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomWidth: 0.3,
+    borderBottomColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
   },
   backBtn: {
-    padding: 8,
-    marginRight: 8,
+    padding: 6,
+    marginRight: 6,
   },
   headerTitleContainer: {
     flex: 1,
   },
   headerName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.secondaryText,
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#0F172A',
   },
   headerStatus: {
-    fontSize: 13,
-    color: '#22c55e',
-    fontWeight: '500',
-  },
-  headerActions: {
-    flexDirection: 'row',
-  },
-  actionBtn: {
-    padding: 8,
-    marginLeft: 8,
-    backgroundColor: '#f8fafc',
-    borderRadius: 20,
+    fontSize: 12,
+    color: '#16A34A',
+    fontWeight: '600',
   },
   contextCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
-    margin: 16,
+    backgroundColor: '#FFFFFF',
+    marginHorizontal: 16,
+    marginVertical: 12,
     padding: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderRadius: 14,
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   contextImage: {
     width: 48,
     height: 48,
-    borderRadius: 8,
+    borderRadius: 10,
     marginRight: 12,
   },
   contextInfo: {
@@ -176,12 +201,12 @@ const styles = StyleSheet.create({
   contextTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.secondaryText,
-    marginBottom: 4,
+    color: '#0F172A',
+    marginBottom: 2,
   },
   contextAction: {
-    fontSize: 13,
-    color: colors.orange,
+    fontSize: 12,
+    color: '#475569',
     fontWeight: '600',
   },
   messagesList: {
@@ -206,80 +231,87 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   messageBubble: {
-    maxWidth: '75%',
+    maxWidth: '78%',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 20,
+    paddingVertical: 10,
+    borderRadius: 18,
   },
   userBubble: {
-    backgroundColor: colors.orange,
+    backgroundColor: '#0F172A',
     borderBottomRightRadius: 4,
   },
   agentBubble: {
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
     borderBottomLeftRadius: 4,
   },
   messageText: {
-    fontSize: 15,
-    lineHeight: 22,
+    fontSize: 14,
+    lineHeight: 20,
   },
   userMessageText: {
-    color: '#ffffff',
+    color: '#FFFFFF',
+    fontWeight: '500',
   },
   agentMessageText: {
-    color: colors.secondaryText,
+    color: '#1E293B',
   },
   messageTime: {
-    fontSize: 11,
+    fontSize: 10,
     marginTop: 4,
     alignSelf: 'flex-end',
   },
   userMessageTime: {
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.65)',
   },
   agentMessageTime: {
-    color: colors.secondaryText,
-    opacity: 0.5,
+    color: '#94A3B8',
   },
   inputContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#f1f5f9',
-    backgroundColor: '#ffffff',
+    paddingVertical: 10,
+    borderTopWidth: 0.3,
+    borderTopColor: '#CBD5E1',
+    backgroundColor: '#FFFFFF',
   },
   attachBtn: {
-    padding: 10,
-    backgroundColor: '#f1f5f9',
-    borderRadius: 20,
-    marginRight: 12,
-    marginBottom: 4,
+    width: 38,
+    height: 38,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   textInput: {
     flex: 1,
-    backgroundColor: '#f8fafc',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 12,
-    fontSize: 15,
-    color: colors.secondaryText,
+    backgroundColor: '#F1F5F9',
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    fontSize: 14,
+    color: '#0F172A',
     maxHeight: 100,
-    minHeight: 40,
+    minHeight: 38,
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   sendBtn: {
-    padding: 10,
-    backgroundColor: '#cbd5e1',
-    borderRadius: 20,
-    marginLeft: 12,
-    marginBottom: 4,
+    width: 38,
+    height: 38,
+    backgroundColor: '#CBD5E1',
+    borderRadius: 19,
+    marginLeft: 10,
     justifyContent: 'center',
     alignItems: 'center',
   },
   sendBtnActive: {
-    backgroundColor: colors.orange,
+    backgroundColor: '#0F172A',
   },
 });
 

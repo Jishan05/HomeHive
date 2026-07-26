@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -16,13 +15,13 @@ const DUMMY_NOTIFICATIONS = [
   {
     id: 'notif_1',
     type: 'price_drop',
-    title: 'Price Drop Alert! 📉',
+    title: 'Price Drop Alert',
     message: 'Modern Villa in Beverly Hills dropped by $150,000! Don\'t miss out.',
     time: '5 mins ago',
     isRead: false,
     icon: 'trending-down-outline',
-    color: '#EF4444',
-    bgColor: '#FEF2F2',
+    color: colors.navyBlue,
+    bgColor: '#F1F5F9',
     targetScreen: 'PropertyDetail',
     targetParams: {
       property: {
@@ -42,13 +41,13 @@ const DUMMY_NOTIFICATIONS = [
   {
     id: 'notif_2',
     type: 'tour',
-    title: 'Tour Visit Confirmed ✅',
+    title: 'Tour Visit Confirmed',
     message: 'Your property tour for Sea View Apartment is confirmed for tomorrow at 10:30 AM.',
     time: '1 hour ago',
     isRead: false,
     icon: 'calendar-outline',
-    color: '#16A34A',
-    bgColor: '#DCFCE7',
+    color: colors.navyBlue,
+    bgColor: '#F1F5F9',
     targetScreen: 'ScheduledTours',
   },
   {
@@ -59,8 +58,8 @@ const DUMMY_NOTIFICATIONS = [
     time: '3 hours ago',
     isRead: false,
     icon: 'chatbubble-ellipses-outline',
-    color: colors.orange,
-    bgColor: '#FFF7ED',
+    color: colors.navyBlue,
+    bgColor: '#F1F5F9',
     targetScreen: 'ChatDetail',
     targetParams: {
       chat: {
@@ -75,26 +74,26 @@ const DUMMY_NOTIFICATIONS = [
   {
     id: 'notif_4',
     type: 'alert',
-    title: 'New Listing Alert 🏠',
+    title: 'New Listing Alert',
     message: '3 new luxury apartments matching your search in Bandra West were just published.',
     time: 'Yesterday',
     isRead: true,
     icon: 'home-outline',
-    color: '#0284C7',
-    bgColor: '#E0F2FE',
+    color: colors.navyBlue,
+    bgColor: '#F1F5F9',
     targetScreen: 'PropertyList',
     targetParams: { title: 'New Listings in Bandra', type: 'featured' },
   },
   {
     id: 'notif_5',
     type: 'system',
-    title: 'Welcome to HomeHive! 🎉',
+    title: 'Welcome to HomeHive',
     message: 'Start exploring verified homes, save shortlists, and book free tour visits instantly.',
     time: '2 days ago',
     isRead: true,
     icon: 'sparkles-outline',
-    color: '#9333EA',
-    bgColor: '#F3E8FF',
+    color: colors.navyBlue,
+    bgColor: '#F1F5F9',
   },
 ];
 
@@ -125,12 +124,12 @@ const NotificationScreen = ({ navigation }: any) => {
 
   const renderNotificationItem = ({ item }: { item: typeof DUMMY_NOTIFICATIONS[0] }) => (
     <TouchableOpacity
-      style={[styles.notifCard, !item.isRead && styles.notifCardUnread]}
-      activeOpacity={0.8}
+      style={[styles.notifRow, !item.isRead && styles.notifRowUnread]}
+      activeOpacity={0.7}
       onPress={() => handleItemPress(item)}
     >
       <View style={[styles.iconContainer, { backgroundColor: item.bgColor }]}>
-        <Icon name={item.icon} size={20} color={item.color} />
+        <Icon name={item.icon} size={18} color={item.color} />
       </View>
 
       <View style={styles.notifContent}>
@@ -146,15 +145,15 @@ const NotificationScreen = ({ navigation }: any) => {
         </Text>
       </View>
 
-      {!item.isRead && <View style={styles.unreadDot} />}
+      {!item.isRead && <View style={styles.unreadIndicator} />}
     </TouchableOpacity>
   );
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <FocusAwareStatusBar barStyle={'dark-content'} />
 
-      {/* Header Bar */}
+      {/* Clean Minimal Header Bar */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backBtn}
@@ -166,35 +165,37 @@ const NotificationScreen = ({ navigation }: any) => {
         <Text style={styles.headerTitle}>Notifications</Text>
         {unreadCount > 0 ? (
           <TouchableOpacity onPress={handleMarkAllRead} activeOpacity={0.7}>
-            <Text style={styles.readAllText}>Read all</Text>
+            <Text style={styles.readAllText}>Mark read</Text>
           </TouchableOpacity>
         ) : (
           <View style={{ width: 40 }} />
         )}
       </View>
 
-      {/* Filter Tabs Row */}
-      <View style={styles.filterRow}>
+      {/* Filter Segment Tabs */}
+      <View style={styles.filterBar}>
         <TouchableOpacity
-          style={[styles.filterChip, activeFilter === 'All' && styles.filterChipActive]}
+          style={[styles.filterTab, activeFilter === 'All' && styles.filterTabActive]}
           onPress={() => setActiveFilter('All')}
+          activeOpacity={0.8}
         >
-          <Text style={[styles.filterText, activeFilter === 'All' && styles.filterTextActive]}>
+          <Text style={[styles.filterTabText, activeFilter === 'All' && styles.filterTabTextActive]}>
             All ({notifications.length})
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.filterChip, activeFilter === 'Unread' && styles.filterChipActive]}
+          style={[styles.filterTab, activeFilter === 'Unread' && styles.filterTabActive]}
           onPress={() => setActiveFilter('Unread')}
+          activeOpacity={0.8}
         >
-          <Text style={[styles.filterText, activeFilter === 'Unread' && styles.filterTextActive]}>
+          <Text style={[styles.filterTabText, activeFilter === 'Unread' && styles.filterTabTextActive]}>
             Unread ({unreadCount})
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Notifications List */}
+      {/* Clean Flat Notifications List */}
       <FlatList
         data={filteredNotifications}
         keyExtractor={item => item.id}
@@ -203,7 +204,7 @@ const NotificationScreen = ({ navigation }: any) => {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Icon name="notifications-off-outline" size={50} color="#CBD5E1" />
+            <Icon name="notifications-off-outline" size={48} color="#CBD5E1" />
             <Text style={styles.emptyTitle}>No Notifications</Text>
             <Text style={styles.emptySubtitle}>You don't have any unread notifications right now.</Text>
           </View>
@@ -216,97 +217,87 @@ const NotificationScreen = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 14,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F1F5F9',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#F8FAFC',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '800',
+    fontSize: 18,
+    fontWeight: '700',
     color: colors.navyBlue,
-    letterSpacing: -0.3,
   },
   readAllText: {
     fontSize: 13,
-    fontWeight: '700',
+    fontWeight: '600',
     color: colors.orange,
   },
-  filterRow: {
+  filterBar: {
     flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 14,
-    backgroundColor: '#F1F5F9',
-    marginRight: 10,
+  filterTab: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#F8FAFC',
+    marginRight: 8,
   },
-  filterChipActive: {
+  filterTabActive: {
     backgroundColor: colors.navyBlue,
   },
-  filterText: {
+  filterTabText: {
     fontSize: 13,
     fontWeight: '600',
     color: '#64748B',
   },
-  filterTextActive: {
+  filterTabTextActive: {
     color: '#FFFFFF',
     fontWeight: '700',
   },
   listContent: {
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 30,
+    paddingBottom: 40,
   },
-  notifCard: {
+  notifRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.03,
-    shadowRadius: 6,
-    elevation: 2,
-    position: 'relative',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
-  notifCardUnread: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#FED7AA',
+  notifRowUnread: {
+    backgroundColor: '#FAFBFD',
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 14,
+    marginRight: 12,
+    marginTop: 2,
   },
   notifContent: {
     flex: 1,
@@ -318,14 +309,15 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   notifTitle: {
-    fontSize: 15,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
     color: colors.navyBlue,
     flex: 1,
     marginRight: 8,
   },
   notifTitleUnread: {
-    fontWeight: '800',
+    fontWeight: '700',
+    color: '#0F172A',
   },
   timeText: {
     fontSize: 11,
@@ -334,15 +326,16 @@ const styles = StyleSheet.create({
   },
   messageText: {
     fontSize: 13,
-    color: '#64748B',
+    color: '#475569',
     lineHeight: 18,
   },
-  unreadDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  unreadIndicator: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
     backgroundColor: colors.orange,
     marginLeft: 8,
+    marginTop: 6,
   },
   emptyContainer: {
     alignItems: 'center',

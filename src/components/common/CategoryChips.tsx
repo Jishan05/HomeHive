@@ -72,13 +72,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     borderRadius: 24,
-    borderWidth: 1,
-    borderColor: '#e2e8f0', // slate-200
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 2, // for android
+    borderWidth: 0.3,
+    borderColor: '#CBD5E1',
   },
   chipSelected: {
     backgroundColor: colors.orange, // Primary active state

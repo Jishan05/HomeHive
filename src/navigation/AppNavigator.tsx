@@ -7,9 +7,11 @@ import EditProfileScreen from '../screens/profile/EditProfileScreen';
 import ChatDetailScreen from '../screens/chat/ChatDetailScreen';
 import PropertyListScreen from '../screens/property/PropertyListScreen';
 import PropertyDetailScreen from '../screens/property/PropertyDetailScreen';
+import FullGalleryScreen from '../screens/property/FullGalleryScreen';
 import MyPropertiesScreen from '../screens/profile/MyPropertiesScreen';
 import ScheduledToursScreen from '../screens/profile/ScheduledToursScreen';
 import NotificationScreen from '../screens/common/NotificationScreen';
+import SearchScreen from '../screens/property/SearchScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -22,9 +24,11 @@ const AppNavigator = () => {
       <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
       <Stack.Screen name="PropertyList" component={PropertyListScreen} />
       <Stack.Screen name="PropertyDetail" component={PropertyDetailScreen} />
+      <Stack.Screen name="FullGallery" component={FullGalleryScreen} />
       <Stack.Screen name="MyProperties" component={MyPropertiesScreen} />
       <Stack.Screen name="ScheduledTours" component={ScheduledToursScreen} />
       <Stack.Screen name="Notification" component={NotificationScreen} />
+      <Stack.Screen name="SearchScreen" component={SearchScreen} />
     </Stack.Navigator>
   );
 };
